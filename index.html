@@ -1,11 +1,94 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Koperasi Simpan Pinjam</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="script.js"></script>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 </head>
 <body>
-    
+  <div class="sidebar" id="sidebar">
+    <div class="logo"><i class="fas fa-building-columns"></i> <span class="sidebar-text">KSP Indosarfa</span></div>
+    <ul>
+        <li class="active"><i class="fas fa-home"></i> <span class="sidebar-text">Beranda</span></li>
+        <li><i class="fas fa-money-bill-transfer"></i> <span class="sidebar-text">Transaksi Kas</span></li>
+        <li class="has-submenu">
+         <i class="fas fa-wallet"></i> <span class="sidebar-text">Simpanan</span> <i class="fas fa-chevron-down submenu-arrow"></i>
+         <ul class="submenu">
+            <li><i class="fas fa-arrow-down"></i> <span class="sidebar-text">Setoran Tunai</span></li>
+            <li><i class="fas fa-arrow-up"></i> <span class="sidebar-text">Penarikan Tunai</span></li>
+         </ul>
+        </li>
+        <li><i class="fas fa-hand-holding-usd"></i> <span class="sidebar-text">Pinjaman</span></li>
+        <li><i class="fas fa-chart-line"></i> <span class="sidebar-text">Laporan</span></li>
+        <li><i class="fas fa-database"></i> <span class="sidebar-text">Master Data</span></li>
+        <li><i class="fas fa-cogs"></i> <span class="sidebar-text">Setting</span></li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="menu-toggle" id="toggleBtn"><i class="fas fa-bars"></i></div>
+      <div class="user-info">
+        <div class="user-dropdown">
+          <span id="userMenu">
+            <i class="fas fa-user-circle"></i> admin <i class="fas fa-chevron-down"></i>
+          </span>
+          <ul class="dropdown-menu" id="dropdownMenu">
+            <li><i class="fas fa-user-cog"></i> User</li>
+            <li><i class="fas fa-sign-out-alt"></i> Logout</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="page-header">
+        <div class="page-title">
+          <i class="fas fa-house"></i> Beranda
+          <span class="sub-title">Menu Utama</span>
+        </div>
+        <div id="datetime"><i class="fas fa-calendar-alt"></i> <span id="datetimeText"></span></div>
+      </div>
+
+      <p>Selamat Datang<br>Hai, admin Silahkan pilih menu disamping untuk mengoperasikan aplikasi</p>
+
+      <div class="cards">
+        <div class="card orange">
+          <h3>Pinjaman Kredit</h3>
+          <p>10,500,000</p>
+          <small>Jml Tagihan Tahun Ini</small>
+        </div>
+        <div class="card green">
+          <h3>Simpanan November 2022</h3>
+          <p>Simpanan Anggota</p>
+          <small>Jumlah Simpanan</small>
+        </div>
+        <div class="card purple">
+          <h3>Kas Bulan November 2022</h3>
+          <p>0</p>
+          <small>Kredit/Debet</small>
+        </div>
+        <div class="card blue">
+          <h3>Data Anggota</h3>
+          <p>8 Anggota Aktif</p>
+          <small>Jumlah Anggota</small>
+        </div>
+        <div class="card red">
+          <h3>Data Peminjam</h3>
+          <p>1 Belum Lunas</p>
+          <small>Status Pinjaman</small>
+        </div>
+        <div class="card cyan">
+          <h3>Data Pengguna</h3>
+          <p>181 User</p>
+          <small>User Aktif & Non Aktif</small>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
