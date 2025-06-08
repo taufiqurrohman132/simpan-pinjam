@@ -11,6 +11,7 @@ class Sidebar(ctk.CTkFrame):
 
         self.add_button("Dashboard", self.app.show_dashboard)
         self.add_button("Kelola Anggota", self.app.show_anggota)
+        self.add_button("Cicilan", self.app.show_cicilan)
         self.add_button("Logout", self.app.logout, color="#d9534f")
 
     def add_button(self, text, command, color=None):
