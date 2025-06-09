@@ -202,7 +202,7 @@ def show_dashboard(app):
 
         tampilkan_grafik()
 
-    elif role == "anggota":
+    elif role == "nasabah":
         # Anggota: Sambutan + info simpanan pribadi
         jumlah_simpanan = get_jumlah_simpanan_pribadi(app.user[0])
         info_frame = ctk.CTkFrame(app.main_frame, fg_color="transparent")

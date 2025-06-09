@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from widget.sidebar import Sidebar
 from views import dashboard, anggota, cicilan, simpanan, pinjaman, laporan, user
-from auth import login_user, create_default_user, register_user
+from auth import login_user, create_default_user, register_anggota
 from database import conn
 
 class KoperasiApp(ctk.CTk):
@@ -82,7 +82,7 @@ class KoperasiApp(ctk.CTk):
         frame = ctk.CTkFrame(self.main_frame)
         frame.pack(pady=10)
 
-        labels = ["Nama Lengkap", "Username", "Password", "Telepon", "Alamat", "Email"]
+        labels = ["Nama Lengkap", "Username", "Password", "Telepon", "Alamat"]
         entries = {}
 
         for i, label in enumerate(labels):
@@ -103,13 +103,13 @@ class KoperasiApp(ctk.CTk):
             password = entries["Password"].get()
             telepon = entries["Telepon"].get().strip()
             alamat = entries["Alamat"].get().strip()
-            email = entries["Email"].get().strip()
+           
 
-            if not (nama and username and password and telepon and alamat and email):
+            if not (nama and username and password and telepon and alamat ):
                 message_label.configure(text="Semua field harus diisi")
                 return
 
-            success, msg = register_user(nama, username, password, telepon, alamat, email)
+            success, msg = register_anggota(nama, username, password, telepon, alamat)
             if success:
                 message_label.configure(text="Pendaftaran berhasil! Silakan login.", text_color="green")
             else:
@@ -132,9 +132,9 @@ class KoperasiApp(ctk.CTk):
         if role == "admin":
             dashboard.show_dashboard(self)
         elif role == "kasir":
-            dashboard.show_dashboard_kasir(self)  # Buat fungsi khusus kasir di modul dashboard.py
+            dashboard.show_dashboard(self)  # Buat fungsi khusus kasir di modul dashboard.py
         elif role == "nasabah":
-            dashboard.show_dashboard_nasabah(self)  # Buat fungsi khusus nasabah di modul dashboard.py
+            dashboard.show_dashboard(self)  # Buat fungsi khusus nasabah di modul dashboard.py
         else:
             ctk.CTkLabel(self.main_frame, text="Role tidak dikenal", font=ctk.CTkFont(size=20)).pack(pady=20)
 
