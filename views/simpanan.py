@@ -19,7 +19,7 @@ def show_simpanan(app):
             cursor.execute("""
                 SELECT s.simpanan_id, a.nama, s.jenis_simpanan, s.jumlah, s.tanggal 
                 FROM Simpanan s 
-                JOIN Anggota a ON s.anggota_id = a.anggota_id
+                JOIN Anggota a ON s.id_anggota = a.id_anggota
                 ORDER BY s.tanggal DESC
             """)
             for row in cursor.fetchall():
