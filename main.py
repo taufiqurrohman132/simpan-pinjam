@@ -1,6 +1,6 @@
 import customtkinter as ctk
 from widget.sidebar import Sidebar
-from views import dashboard, anggota, cicilan, simpanan
+from views import dashboard, anggota, cicilan, simpanan, pinjaman, laporan
 from auth import login_user, create_default_user
 from database import conn
 
@@ -8,7 +8,7 @@ class KoperasiApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        self.geometry("900x600")
+        self.geometry("1000x600")
         self.title("Koperasi App")
 
         # Frame utama tempat konten views ditampilkan
@@ -60,6 +60,18 @@ class KoperasiApp(ctk.CTk):
     def show_simpanan(self):
         if self.user and self.user[3] == "admin":
             simpanan.show_simpanan(self)
+        else:
+            self.clear_main()
+            ctk.CTkLabel(self.main_frame, text="Akses Ditolak. Hanya Admin.", font=ctk.CTkFont(size=20)).pack(pady=20)
+    def show_pinjaman(self):
+        if self.user and self.user[3] == "admin":
+            pinjaman.show_pinjaman(self)
+        else:
+            self.clear_main()
+            ctk.CTkLabel(self.main_frame, text="Akses Ditolak. Hanya Admin.", font=ctk.CTkFont(size=20)).pack(pady=20)
+    def show_laporan(self):
+        if self.user and self.user[3] == "admin":
+            laporan.show_laporan(self)
         else:
             self.clear_main()
             ctk.CTkLabel(self.main_frame, text="Akses Ditolak. Hanya Admin.", font=ctk.CTkFont(size=20)).pack(pady=20)
