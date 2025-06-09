@@ -13,6 +13,7 @@ class Sidebar(ctk.CTkFrame):
         self.menu_items = [
             {"text": "Dashboard", "icon": "🏠", "command": self.app.show_dashboard},
             {"text": "Kelola Anggota", "icon": "👥", "command": self.app.show_anggota},
+            {"text": "Kelola User", "icon": "👥", "command": self.app.show_user},
             {"text": "Cicilan", "icon": "💳", "command": self.app.show_cicilan},
             {"text": "Pinjaman", "icon": "💰", "command": self.app.show_pinjaman},
             {"text": "Simpanan", "icon": "🏦", "command": self.app.show_simpanan},

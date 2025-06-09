@@ -1,11 +1,7 @@
 import customtkinter as ctk
 from tkinter import messagebox
 import datetime
-import sqlite3
-
-def get_connection():
-    print("[DEBUG] Membuka koneksi database")
-    return sqlite3.connect("koperasi.db", timeout=5)
+from database import conn  # ambil koneksi global
 
 def show_simpanan(app):
     app.clear_main()
@@ -14,19 +10,18 @@ def show_simpanan(app):
         for widget in scrollable_frame.winfo_children():
             widget.destroy()
         try:
-            with get_connection() as conn:
-                print("[DEBUG] Koneksi load_simpanan dibuka")
-                cursor = conn.cursor()
-                cursor.execute("""
-                    SELECT s.id_simpanan, a.nama, s.jenis_simpanan, s.jumlah, s.tanggal 
-                    FROM Simpanan s 
-                    JOIN Anggota a ON s.id_anggota = a.id_anggota
-                    ORDER BY s.tanggal DESC
-                """)
-                rows = cursor.fetchall()
-                print(f"[DEBUG] Jumlah data yang diambil: {len(rows)}")
-                # Tidak perlu conn.close() karena with otomatis close
-                print("[DEBUG] Koneksi load_simpanan ditutup")
+            cursor = conn.cursor()
+            print("[DEBUG] Koneksi load_simpanan dibuka")
+            cursor.execute("""
+                SELECT s.id_simpanan, a.nama, s.jenis_simpanan, s.jumlah, s.tanggal 
+                FROM Simpanan s 
+                JOIN Anggota a ON s.id_anggota = a.id_anggota
+                ORDER BY s.tanggal DESC
+            """)
+            rows = cursor.fetchall()
+            cursor.close()
+            print(f"[DEBUG] Jumlah data yang diambil: {len(rows)}")
+            print("[DEBUG] Koneksi load_simpanan ditutup")
 
             for i, row in enumerate(rows):
                 row_frame = ctk.CTkFrame(scrollable_frame, fg_color="white")
@@ -48,12 +43,12 @@ def show_simpanan(app):
     def delete_simpanan(id_simpanan):
         if messagebox.askyesno("Konfirmasi", "Yakin ingin menghapus data ini?"):
             try:
-                with get_connection() as conn:
-                    print(f"[DEBUG] Koneksi delete_simpanan dibuka untuk id_simpanan={id_simpanan}")
-                    cursor = conn.cursor()
-                    cursor.execute("DELETE FROM Simpanan WHERE id_simpanan = ?", (id_simpanan,))
-                    conn.commit()
-                    print("[DEBUG] Delete berhasil dan koneksi ditutup")
+                cursor = conn.cursor()
+                print(f"[DEBUG] Koneksi delete_simpanan dibuka untuk id_simpanan={id_simpanan}")
+                cursor.execute("DELETE FROM Simpanan WHERE id_simpanan = ?", (id_simpanan,))
+                conn.commit()
+                cursor.close()
+                print("[DEBUG] Delete berhasil dan koneksi ditutup")
                 load_simpanan()
             except Exception as e:
                 print(f"[ERROR] delete_simpanan: {e}")
@@ -66,13 +61,13 @@ def show_simpanan(app):
         form.resizable(False, False)
 
         try:
-            with get_connection() as conn:
-                print("[DEBUG] Koneksi show_form (ambil anggota) dibuka")
-                cursor = conn.cursor()
-                cursor.execute("SELECT id_anggota, nama FROM Anggota")
-                anggota_data = cursor.fetchall()
-                print(f"[DEBUG] Jumlah anggota yang diambil: {len(anggota_data)}")
-                print("[DEBUG] Koneksi show_form ditutup")
+            cursor = conn.cursor()
+            print("[DEBUG] Koneksi show_form (ambil anggota) dibuka")
+            cursor.execute("SELECT id_anggota, nama FROM Anggota")
+            anggota_data = cursor.fetchall()
+            cursor.close()
+            print(f"[DEBUG] Jumlah anggota yang diambil: {len(anggota_data)}")
+            print("[DEBUG] Koneksi show_form ditutup")
         except Exception as e:
             print(f"[ERROR] show_form ambil anggota: {e}")
             messagebox.showerror("Database Error", str(e))
@@ -115,23 +110,25 @@ def show_simpanan(app):
                 if jumlah <= 0:
                     raise ValueError("Jumlah harus lebih dari 0")
 
-                with get_connection() as conn:
-                    print("[DEBUG] Koneksi submit dibuka")
-                    cursor = conn.cursor()
-                    if mode == "add":
-                        cursor.execute("""
-                            INSERT INTO Simpanan (id_anggota, jenis_simpanan, jumlah, tanggal)
-                            VALUES (?, ?, ?, ?)
-                        """, (anggota_id, jenis, jumlah, tanggal))
-                    elif mode == "edit" and selected:
-                        id_simpanan = selected[0]
-                        cursor.execute("""
-                            UPDATE Simpanan
-                            SET id_anggota=?, jenis_simpanan=?, jumlah=?, tanggal=?
-                            WHERE id_simpanan=?
-                        """, (anggota_id, jenis, jumlah, tanggal, id_simpanan))
-                    conn.commit()
-                    print("[DEBUG] Data simpanan disimpan dan koneksi submit ditutup")
+                cursor = conn.cursor()
+                print("[DEBUG] Koneksi submit dibuka")
+                if mode == "add":
+                    print("menambahkan")
+                    cursor.execute("""
+                        INSERT INTO Simpanan (id_anggota, jenis_simpanan, jumlah, tanggal)
+                        VALUES (?, ?, ?, ?)
+                    """, (anggota_id, jenis, jumlah, tanggal))
+                elif mode == "edit" and selected:
+                    id_simpanan = selected[0]
+                    print("mengupdate")
+                    cursor.execute("""
+                        UPDATE Simpanan
+                        SET id_anggota=?, jenis_simpanan=?, jumlah=?, tanggal=?
+                        WHERE id_simpanan=?
+                    """, (anggota_id, jenis, jumlah, tanggal, id_simpanan))
+                conn.commit()
+                cursor.close()
+                print("[DEBUG] Data simpanan disimpan dan koneksi submit ditutup")
 
                 messagebox.showinfo("Sukses", "Data simpanan berhasil disimpan.")
                 form.destroy()
