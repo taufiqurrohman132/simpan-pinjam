@@ -104,7 +104,7 @@ def get_total_pinjaman():
 def get_total_cicilan():
     conn = sqlite3.connect("koperasi.db")
     cursor = conn.cursor()
-    cursor.execute("SELECT SUM(jumlah_bayar) FROM cicilan")
+    cursor.execute("SELECT SUM(jumlah) FROM cicilan")
     result = cursor.fetchone()[0]
     conn.close()
     return result if result else 0
@@ -122,12 +122,17 @@ def show_dashboard(app):
 
     # Fungsi reusable untuk stat card
     def stat_card(parent, title, value, emoji, color):
-        card = ctk.CTkFrame(parent, width=200, height=120, corner_radius=16, fg_color=color)
-        card.pack_propagate(False)
-        ctk.CTkLabel(card, text=emoji, font=ctk.CTkFont(size=32)).pack(pady=(10, 0))
-        ctk.CTkLabel(card, text=title, font=ctk.CTkFont(size=14, weight="bold"), text_color="white").pack(pady=(5, 0))
-        ctk.CTkLabel(card, text=str(value), font=ctk.CTkFont(size=22, weight="bold"), text_color="white").pack(pady=(5, 10))
+        card = ctk.CTkFrame(parent, fg_color=color, corner_radius=16)
+        card.grid_propagate(True)  # biarkan isi menentukan tinggi dinamis
+        inner_frame = ctk.CTkFrame(card, fg_color="transparent")
+        inner_frame.pack(expand=True, fill="both", padx=10, pady=10)
+
+        ctk.CTkLabel(inner_frame, text=emoji, font=ctk.CTkFont(size=32)).pack(pady=(0, 4))
+        ctk.CTkLabel(inner_frame, text=title, font=ctk.CTkFont(size=14, weight="bold"), text_color="white").pack()
+        ctk.CTkLabel(inner_frame, text=str(value), font=ctk.CTkFont(size=20, weight="bold"), text_color="white").pack()
+
         return card
+
 
     if role == "admin":
         total_anggota = get_total_anggota()
@@ -144,10 +149,12 @@ def show_dashboard(app):
             ("Total Pinjaman", f"Rp {total_pinjaman:,.0f}", "📄", "#c62828"),
             ("Total Cicilan", f"Rp {total_cicilan:,.0f}", "💳", "#1565c0"),
         ]
+        for i in range(len(cards)):
+            stats_frame.grid_columnconfigure(i, weight=1)  # buat kolom fleksibel
+
         for i, (title, value, emoji, color) in enumerate(cards):
             card = stat_card(stats_frame, title, value, emoji, color)
-            card.grid(row=0, column=i, padx=10, pady=5)
-
+            card.grid(row=0, column=i, padx=10, pady=10, sticky="nsew")
         # Filter & grafik
         filter_frame = ctk.CTkFrame(app.main_frame, fg_color="transparent")
         filter_frame.pack(padx=30, pady=(30, 10), fill="x")

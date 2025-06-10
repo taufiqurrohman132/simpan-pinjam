@@ -16,7 +16,7 @@ class KoperasiApp(ctk.CTk):
         self.main_frame.pack(side="right", fill="both", expand=True)
 
         self.sidebar = None  # Sidebar akan dibuat setelah login
-
+       
         self.user = None
 
         create_default_user()

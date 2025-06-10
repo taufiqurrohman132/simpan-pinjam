@@ -6,7 +6,8 @@ from tkinter import ttk
 from database import c, conn
 
 def show_anggota(app):
-    if app.role not in ["admin", "pengurus"]:
+    if app.user[4] not in ["admin", "pengurus"]:
+
         messagebox.showwarning("Akses Ditolak", "Anda tidak memiliki akses ke menu Anggota.")
         return 
     app.clear_main()
