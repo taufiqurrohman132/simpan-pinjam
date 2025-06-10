@@ -4,6 +4,7 @@ from views import dashboard, anggota, cicilan, simpanan, pinjaman, laporan, user
 from auth import login_user, create_default_user, register_anggota
 from database import conn
 
+
 class KoperasiApp(ctk.CTk):
     def __init__(self):
         super().__init__()
@@ -14,8 +15,7 @@ class KoperasiApp(ctk.CTk):
         self.main_frame = ctk.CTkFrame(self)
         self.main_frame.pack(side="right", fill="both", expand=True)
 
-        self.sidebar = Sidebar(self, self)
-        self.sidebar.pack(side="left", fill="y")
+        self.sidebar = None  # Sidebar akan dibuat setelah login
 
         self.user = None
 
@@ -38,7 +38,8 @@ class KoperasiApp(ctk.CTk):
     # ------------------- Halaman Login -------------------
     def show_login(self):
         self.clear_main()
-        self.sidebar.pack_forget()  # sembunyikan sidebar saat login/register
+        if self.sidebar:
+            self.sidebar.pack_forget()
 
         ctk.CTkLabel(self.main_frame, text="Login", font=ctk.CTkFont(size=28, weight="bold")).pack(pady=20)
 
@@ -62,7 +63,12 @@ class KoperasiApp(ctk.CTk):
             user = login_user(username, password)
             if user:
                 self.user = user
-                self.sidebar.pack(side="left", fill="y")  # tampilkan sidebar setelah login
+                if self.sidebar:
+                    self.sidebar.destroy()
+
+                self.sidebar = Sidebar(self, self, role=user[4])
+                self.sidebar.pack(side="left", fill="y")
+
                 self.show_dashboard()
             else:
                 message_label.configure(text="Username atau password salah")
@@ -75,7 +81,8 @@ class KoperasiApp(ctk.CTk):
     # ------------------- Halaman Register -------------------
     def show_register(self):
         self.clear_main()
-        self.sidebar.pack_forget()  # sembunyikan sidebar saat register
+        if self.sidebar:
+            self.sidebar.pack_forget()
 
         ctk.CTkLabel(self.main_frame, text="Daftar Nasabah Baru", font=ctk.CTkFont(size=24, weight="bold")).pack(pady=20)
 
@@ -103,9 +110,8 @@ class KoperasiApp(ctk.CTk):
             password = entries["Password"].get()
             telepon = entries["Telepon"].get().strip()
             alamat = entries["Alamat"].get().strip()
-           
 
-            if not (nama and username and password and telepon and alamat ):
+            if not (nama and username and password and telepon and alamat):
                 message_label.configure(text="Semua field harus diisi")
                 return
 
@@ -125,54 +131,48 @@ class KoperasiApp(ctk.CTk):
             return
 
         self.clear_main()
-        self.sidebar.pack(side="left", fill="y")
+        if self.sidebar:
+            self.sidebar.pack(side="left", fill="y")
 
-        # Sesuaikan tampilan dashboard berdasarkan role
         role = self.user[4]
-        if role == "admin":
-            dashboard.show_dashboard(self)
-        elif role == "kasir":
-            dashboard.show_dashboard(self)  # Buat fungsi khusus kasir di modul dashboard.py
-        elif role == "nasabah":
-            dashboard.show_dashboard(self)  # Buat fungsi khusus nasabah di modul dashboard.py
-        else:
-            ctk.CTkLabel(self.main_frame, text="Role tidak dikenal", font=ctk.CTkFont(size=20)).pack(pady=20)
+        dashboard.show_dashboard(self)  # Buat fungsi berbeda di dashboard.py jika ingin tampil beda
 
     # ------------------- Halaman Kelola -------------------
     def show_anggota(self):
+        if self.user[4] != "admin":
+            return
         self.clear_main()
-        self.sidebar.pack(side="left", fill="y")
         anggota.show_anggota(self)
 
     def show_user(self):
+        if self.user[4] != "admin":
+            return
         self.clear_main()
-        self.sidebar.pack(side="left", fill="y")
         user.show_user_management(self)
 
     def show_cicilan(self):
         self.clear_main()
-        self.sidebar.pack(side="left", fill="y")
         cicilan.show_cicilan(self)
 
     def show_pinjaman(self):
         self.clear_main()
-        self.sidebar.pack(side="left", fill="y")
         pinjaman.show_pinjaman(self)
 
     def show_simpanan(self):
         self.clear_main()
-        self.sidebar.pack(side="left", fill="y")
         simpanan.show_simpanan(self)
 
     def show_laporan(self):
+        if self.user[4] != "admin":
+            return
         self.clear_main()
-        self.sidebar.pack(side="left", fill="y")
         laporan.show_laporan(self)
 
     # ------------------- Logout -------------------
     def logout(self):
         self.user = None
-        self.sidebar.pack_forget()
+        if self.sidebar:
+            self.sidebar.pack_forget()
         self.show_login()
 
 
