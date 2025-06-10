@@ -2,7 +2,7 @@ import hashlib
 import sqlite3
 
 # Koneksi ke database
-conn = sqlite3.connect("KOPERASI.db")
+conn = sqlite3.connect("koperasi.db")
 c = conn.cursor()
 
 # Fungsi hash password
@@ -35,7 +35,7 @@ def register_anggota(nama, username, password, telepon, alamat):
 
     hashed = hash_password(password)
     try:
-        # Simpan ke tabel user (dengan role anggota)
+        # Simpan ke tabel user (dengan role nasabah)
         c.execute(
             "INSERT INTO user (nama, username, password, role) VALUES (?, ?, ?, ?)",
             (nama, username, hashed, "nasabah")
@@ -52,3 +52,16 @@ def register_anggota(nama, username, password, telepon, alamat):
         return True, "Pendaftaran anggota berhasil"
     except Exception as e:
         return False, f"Terjadi kesalahan saat mendaftar: {e}"
+
+# -------------------------
+# Hak akses berdasarkan role
+# -------------------------
+ROLE_PERMISSIONS = {
+    "admin": ["dashboard", "anggota", "simpanan", "pinjaman", "cicilan", "laporan", "user"],
+    "kasir": ["dashboard", "simpanan", "pinjaman", "cicilan"],
+    "nasabah": ["dashboard", "simpanan_pribadi", "pinjaman_pribadi"]
+}
+
+def get_allowed_pages(role):
+    """Mengembalikan daftar halaman/menu yang bisa diakses berdasarkan role"""
+    return ROLE_PERMISSIONS.get(role, [])

@@ -6,6 +6,9 @@ from tkinter import ttk
 from database import c, conn
 
 def show_anggota(app):
+    if app.role not in ["admin", "pengurus"]:
+        messagebox.showwarning("Akses Ditolak", "Anda tidak memiliki akses ke menu Anggota.")
+        return 
     app.clear_main()
 
     ctk.CTkLabel(app.main_frame, text="Manajemen Anggota", font=ctk.CTkFont(size=26, weight="bold")).pack(pady=(30, 10))

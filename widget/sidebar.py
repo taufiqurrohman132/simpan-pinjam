@@ -1,24 +1,36 @@
 import customtkinter as ctk
+from auth import get_allowed_pages
 
 class Sidebar(ctk.CTkFrame):
-    def __init__(self, master, app, **kwargs):
+    def __init__(self, master, app, role, **kwargs):
         super().__init__(master, fg_color="#2c3e50", **kwargs)
 
         self.app = app
+        self.role = role
         self.collapsed = False
         self.active_button = None
         self.configure(width=200)
         self.pack_propagate(False)
+        allowed_pages = get_allowed_pages(role) 
+        # Daftar semua item yang tersedia, dikaitkan dengan nama halaman
+        self.all_menu_items = {
+            "dashboard": {"text": "Dashboard", "icon": "🏠", "command": self.app.show_dashboard},
+            "anggota": {"text": "Kelola Anggota", "icon": "👥", "command": self.app.show_anggota},
+            "user": {"text": "Kelola User", "icon": "👥", "command": self.app.show_user},
+            "cicilan": {"text": "Cicilan", "icon": "💳", "command": self.app.show_cicilan},
+            "pinjaman": {"text": "Pinjaman", "icon": "💰", "command": self.app.show_pinjaman},
+            "simpanan": {"text": "Simpanan", "icon": "🏦", "command": self.app.show_simpanan},
+            "laporan": {"text": "Laporan", "icon": "📊", "command": self.app.show_laporan},
+            #"simpanan_pribadi": {"text": "Simpanan Saya", "icon": "🏦", "command": self.app.show_simpanan_pribadi},
+            #"pinjaman_pribadi": {"text": "Pinjaman Saya", "icon": "💰", "command": self.app.show_pinjaman_pribadi}
+        }
 
-        self.menu_items = [
-            {"text": "Dashboard", "icon": "🏠", "command": self.app.show_dashboard},
-            {"text": "Kelola Anggota", "icon": "👥", "command": self.app.show_anggota},
-            {"text": "Kelola User", "icon": "👥", "command": self.app.show_user},
-            {"text": "Cicilan", "icon": "💳", "command": self.app.show_cicilan},
-            {"text": "Pinjaman", "icon": "💰", "command": self.app.show_pinjaman},
-            {"text": "Simpanan", "icon": "🏦", "command": self.app.show_simpanan},
-            {"text": "Laporan", "icon": "📊", "command": self.app.show_laporan},
-        ]
+        # Ambil menu yang boleh diakses oleh role pengguna
+        allowed_pages = get_allowed_pages(self.role)
+
+
+        # Filter menu sesuai role
+        self.menu_items = [self.all_menu_items[key] for key in allowed_pages if key in self.all_menu_items]
 
         # ======= Header / Judul =======
         self.top_frame = ctk.CTkFrame(self, fg_color="transparent")
