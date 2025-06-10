@@ -1,6 +1,7 @@
 import customtkinter as ctk
 from tkinter import messagebox
 from database import conn  # koneksi global
+from helper import helper
 
 def show_user_management(app):
     app.clear_main()
@@ -18,14 +19,18 @@ def show_user_management(app):
         for widget in table_frame.winfo_children():
             widget.destroy()
 
+        # Atur agar kolom bisa melebar
+        for col_index in range(6):  # total 6 kolom
+            table_frame.grid_columnconfigure(col_index, weight=1)
+
         headers = ["ID", "Nama", "Username", "Password", "Role", "Aksi"]
         for col, text in enumerate(headers):
             lbl = ctk.CTkLabel(table_frame, text=text, font=ctk.CTkFont(weight="bold"))
-            lbl.grid(row=0, column=col, padx=5, pady=5, sticky="w")
+            lbl.grid(row=0, column=col, padx=5, pady=5, sticky="ew")
 
         try:
             cur = conn.cursor()
-            cur.execute("SELECT user_id, nama, username, password, role FROM users ORDER BY user_id")
+            cur.execute("SELECT id_user, nama, username, password, role FROM user ORDER BY id_user")
             rows = cur.fetchall()
         except Exception as e:
             messagebox.showerror("Error", f"Gagal mengambil data: {e}")
@@ -34,17 +39,19 @@ def show_user_management(app):
         for i, row in enumerate(rows, start=1):
             for j, val in enumerate(row):
                 lbl = ctk.CTkLabel(table_frame, text=str(val))
-                lbl.grid(row=i, column=j, padx=5, pady=5, sticky="w")
+                lbl.grid(row=i, column=j, padx=5, pady=5, sticky="ew")
 
-            btn_edit = ctk.CTkButton(table_frame, text="Edit", width=50,
-                                     command=lambda uid=row[0]: open_form(uid))
-            btn_edit.grid(row=i, column=5, padx=(5, 2), pady=5, sticky="w")
+            aksi_frame = ctk.CTkFrame(table_frame, fg_color="transparent")
+            aksi_frame.grid(row=i, column=5, padx=5, pady=5, sticky="ew")
 
-            btn_delete = ctk.CTkButton(table_frame, text="Hapus", width=60,
-                                       fg_color="red",
-                                       hover_color="#cc3333",
-                                       command=lambda uid=row[0]: delete_user(uid))
-            btn_delete.grid(row=i, column=5, padx=(60, 5), pady=5, sticky="w")
+            btn_edit = ctk.CTkButton(aksi_frame, text="Edit", width=50,
+                                    command=lambda uid=row[0]: open_form(uid))
+            btn_edit.pack(side="left", padx=2)
+
+            btn_delete = ctk.CTkButton(aksi_frame, text="Hapus", width=60,
+                                    fg_color="red", hover_color="#cc3333",
+                                    command=lambda uid=row[0]: delete_user(uid))
+            btn_delete.pack(side="left", padx=2)
 
     form_window = None
 
@@ -56,8 +63,9 @@ def show_user_management(app):
 
         form_window = ctk.CTkToplevel(app)
         form_window.title("Tambah User" if user_id is None else "Edit User")
-        form_window.geometry("400x350")
+        form_window.geometry("500x400")
         form_window.grab_set()
+        helper.center_window(form_window, 500, 400)
 
         lbl_nama = ctk.CTkLabel(form_window, text="Nama:")
         lbl_nama.pack(pady=(20,5))
@@ -83,7 +91,7 @@ def show_user_management(app):
         if user_id is not None:
             try:
                 cur = conn.cursor()
-                cur.execute("SELECT nama, username, password, role FROM users WHERE user_id=?", (user_id,))
+                cur.execute("SELECT nama, username, password, role FROM user WHERE id_user=?", (user_id,))
                 user = cur.fetchone()
                 if user:
                     ent_nama.insert(0, user[0])
@@ -106,10 +114,10 @@ def show_user_management(app):
             try:
                 cur = conn.cursor()
                 if user_id is None:
-                    cur.execute("INSERT INTO users (nama, username, password, role) VALUES (?, ?, ?, ?)",
+                    cur.execute("INSERT INTO user (nama, username, password, role) VALUES (?, ?, ?, ?)",
                                 (nama, username, password, role))
                 else:
-                    cur.execute("UPDATE users SET nama=?, username=?, password=?, role=? WHERE user_id=?",
+                    cur.execute("UPDATE user SET nama=?, username=?, password=?, role=? WHERE id_user=?",
                                 (nama, username, password, role, user_id))
                 conn.commit()
                 messagebox.showinfo("Sukses", "Data user berhasil disimpan.")
@@ -125,7 +133,7 @@ def show_user_management(app):
         if messagebox.askyesno("Konfirmasi", "Apakah Anda yakin ingin menghapus user ini?"):
             try:
                 cur = conn.cursor()
-                cur.execute("DELETE FROM users WHERE user_id=?", (user_id,))
+                cur.execute("DELETE FROM user WHERE id_user=?", (user_id,))
                 conn.commit()
                 messagebox.showinfo("Sukses", "User berhasil dihapus.")
                 load_data()

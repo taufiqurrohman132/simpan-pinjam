@@ -1,64 +1,121 @@
-import customtkinter as ctk
-from tkinter import messagebox
 from database import conn
+import customtkinter as ctk
 
 def show_pinjaman(app):
     app.clear_main()
 
-    ctk.CTkLabel(app.main_frame, text="Halaman Pinjaman", font=ctk.CTkFont(size=22, weight="bold")).pack(pady=20)
+    # ========= HEADER TITLE =========
+    header = ctk.CTkFrame(app.main_frame, fg_color="transparent")
+    header.pack(fill="x", padx=20, pady=(20, 0))
 
-    frame_list = ctk.CTkFrame(app.main_frame)
-    frame_list.pack(pady=10, fill="both", expand=True)
+    ctk.CTkLabel(
+        header, text="📄 Halaman Pinjaman",
+        font=ctk.CTkFont(size=24, weight="bold"),
+        text_color="#00ADB5"
+    ).pack(anchor="w")
 
-    ctk.CTkLabel(frame_list, text="Daftar Pengajuan Pinjaman", font=ctk.CTkFont(size=16)).pack(pady=10)
+    ctk.CTkLabel(
+        header, text="Kelola pengajuan pinjaman anggota dengan tampilan modern.",
+        font=ctk.CTkFont(size=13), text_color="#888888"
+    ).pack(anchor="w", pady=(0, 10))
 
-    listbox = ctk.CTkScrollableFrame(frame_list, height=250, width=600)
-    listbox.pack(pady=5)
+    # ========= STATISTIK =========
+    stats_frame = ctk.CTkFrame(app.main_frame, fg_color="#FFFFFF")
+    stats_frame.pack(fill="x", padx=20, pady=10)
 
-    def refresh_list():
-        # Bersihkan isi lama
-        for widget in listbox.winfo_children():
-            widget.destroy()
+    def stat_card(text, value, color):
+        frame = ctk.CTkFrame(stats_frame, corner_radius=10, fg_color=color, width=200, height=70)
+        frame.pack(side="left", expand=True, fill="both", padx=10, pady=10)
 
-        c = conn.cursor()
-        c.execute("SELECT bunga_id, anggota_id, jumlah, tanggal_pengajuan FROM bunga WHERE status = 'diajukan'")
-        pinjamans = c.fetchall()
+        ctk.CTkLabel(frame, text=text, font=ctk.CTkFont(size=14), text_color="#FFFFFF").pack()
+        ctk.CTkLabel(frame, text=value, font=ctk.CTkFont(size=18, weight="bold"), text_color="#FFFFFF").pack()
 
-        if not pinjamans:
-            ctk.CTkLabel(listbox, text="Tidak ada pengajuan pinjaman.").pack(pady=10)
-            return
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*), AVG(tenor), SUM(jumlah) FROM pinjaman WHERE status='diajukan'")
+    count, avg_tenor, total = cursor.fetchone()
 
-        for pinjaman in pinjamans:
-            bunga_id, anggota_id, jumlah, tanggal_pengajuan = pinjaman
-            text = f"ID: {bunga_id} | Anggota: {anggota_id} | Jumlah: Rp{jumlah} | Tgl: {tanggal_pengajuan}"
-            btn = ctk.CTkButton(listbox, text=text, command=lambda b_id=bunga_id: tampilkan_detail(b_id))
-            btn.pack(pady=5, padx=10, fill="x")
+    stat_card("Jumlah Pinjaman", f"{count or 0} data", "#00ADB5")
+    stat_card("Total Diajukan", f"Rp {total or 0:,.0f}", "#393E46")
+    stat_card("Rata-rata Tenor", f"{round(avg_tenor or 0):.0f} bulan", "#FF5722")
 
-    def tampilkan_detail(bunga_id):
-        for widget in app.main_frame.winfo_children():
-            widget.destroy()
+    # ========= FILTER & SEARCH =========
+    filter_frame = ctk.CTkFrame(app.main_frame, fg_color="transparent")
+    filter_frame.pack(fill="x", padx=20)
 
-        ctk.CTkLabel(app.main_frame, text=f"Detail Pinjaman ID {bunga_id}", font=ctk.CTkFont(size=20, weight="bold")).pack(pady=20)
+    search_var = ctk.StringVar()
+    ctk.CTkEntry(filter_frame, placeholder_text="🔍 Cari keterangan...", textvariable=search_var, width=250).pack(side="left", padx=(0, 10))
 
-        c = conn.cursor()
-        c.execute("SELECT anggota_id, presentase, jumlah, keterangan, tenor, tgl_berlaku, status, tanggal_pengajuan FROM bunga WHERE bunga_id=?", (bunga_id,))
-        data = c.fetchone()
+    status_filter = ctk.CTkOptionMenu(
+        filter_frame,
+        values=["Semua", "Diajukan", "Disetujui", "Lunas"],
+        width=140
+    )
+    status_filter.set("Diajukan")
+    status_filter.pack(side="left")
 
-        labels = ["Anggota ID", "Presentase", "Jumlah", "Keterangan", "Tenor", "Tanggal Berlaku", "Status", "Tanggal Pengajuan"]
-        for i, value in enumerate(data):
-            ctk.CTkLabel(app.main_frame, text=f"{labels[i]}: {value}", anchor="w").pack(padx=20, pady=2, fill="x")
+    ctk.CTkButton(filter_frame, text="🔄 Refresh", command=lambda: show_pinjaman(app)).pack(side="right")
 
-        btn_frame = ctk.CTkFrame(app.main_frame)
-        btn_frame.pack(pady=20)
+    # ========= SCROLLABLE LIST =========
+    list_frame = ctk.CTkScrollableFrame(app.main_frame, fg_color="#F4F4F4", height=450)
+    list_frame.pack(fill="both", expand=True, padx=20, pady=(10, 20))
 
-        def update_status(new_status):
-            c.execute("UPDATE bunga SET status=? WHERE bunga_id=?", (new_status, bunga_id))
-            conn.commit()
-            messagebox.showinfo("Berhasil", f"Status berhasil diperbarui ke '{new_status}'")
-            show_pinjaman(app)
+    # Ambil data pinjaman
+    cursor.execute("""
+        SELECT p.bunga_id, p.jumlah, b.presentase, p.tenor, p.keterangan,
+               p.tgl_berlaku, p.tanggal_pengajuan, p.status
+        FROM pinjaman p
+        JOIN bunga b ON p.id_bunga = b.id_bunga
+        WHERE p.status = 'diajukan'
+    """)
+    rows = cursor.fetchall()
 
-        ctk.CTkButton(btn_frame, text="Setujui", fg_color="green", hover_color="darkgreen", command=lambda: update_status("disetujui")).pack(side="left", padx=10)
-        ctk.CTkButton(btn_frame, text="Tolak", fg_color="red", hover_color="darkred", command=lambda: update_status("ditolak")).pack(side="right", padx=10)
+    def status_color(s):
+        return {"diajukan": "#FF9800", "disetujui": "#4CAF50", "lunas": "#F44336"}.get(s.lower(), "#9E9E9E")
 
-    # Mulai dengan menampilkan daftar
-    refresh_list()
+    if not rows:
+        ctk.CTkLabel(
+            list_frame, text="📭 Tidak ada data pinjaman saat ini.",
+            font=ctk.CTkFont(size=16, weight="bold"), text_color="#777"
+        ).pack(pady=30)
+        return
+
+    # Tampilkan tiap pinjaman
+    for bunga_id, jumlah, bunga, tenor, ket, tgl_berlaku, tgl_pengajuan, status in rows:
+        card = ctk.CTkFrame(list_frame, corner_radius=12, fg_color="#FFFFFF", border_color="#E0E0E0", border_width=1)
+        card.pack(fill="x", pady=10, padx=10)
+
+        top = ctk.CTkFrame(card, fg_color="transparent")
+        top.pack(fill="x", padx=15, pady=(10, 0))
+
+        ctk.CTkLabel(top, text=f"ID Bunga #{bunga_id}", font=ctk.CTkFont(size=16, weight="bold")).pack(side="left")
+
+        ctk.CTkLabel(
+            top, text=status.upper(),
+            font=ctk.CTkFont(size=12),
+            text_color="#FFFFFF",
+            fg_color=status_color(status),
+            corner_radius=8, padx=10, pady=4
+        ).pack(side="right")
+
+        # Info rows
+        info_data = [
+            ("Jumlah", f"Rp {jumlah:,.0f}"),
+            ("Bunga", f"{bunga}%"),
+            ("Tenor", f"{tenor} bulan"),
+            ("Tgl Berlaku", tgl_berlaku),
+            ("Tgl Pengajuan", tgl_pengajuan),
+            ("Keterangan", ket)
+        ]
+
+        for label, value in info_data:
+            row = ctk.CTkFrame(card, fg_color="transparent")
+            row.pack(fill="x", padx=15, pady=2)
+            ctk.CTkLabel(row, text=label, width=130, anchor="w", text_color="#666").pack(side="left")
+            ctk.CTkLabel(row, text=value, anchor="w", text_color="#111").pack(side="left")
+
+        # Aksi tombol
+        action_row = ctk.CTkFrame(card, fg_color="transparent")
+        action_row.pack(padx=15, pady=10)
+
+        ctk.CTkButton(action_row, text="📋 Detail", fg_color="#00BCD4", hover_color="#0097A7", corner_radius=6).pack(side="left", padx=5)
+        ctk.CTkButton(action_row, text="🗑️ Hapus", fg_color="#FF5252", hover_color="#E53935", corner_radius=6).pack(side="left", padx=5)

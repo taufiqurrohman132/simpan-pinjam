@@ -2,6 +2,7 @@ import customtkinter as ctk
 from tkinter import messagebox
 import datetime
 from database import conn  # ambil koneksi global
+from helper import helper
 
 def show_simpanan(app):
     app.clear_main()
@@ -24,17 +25,37 @@ def show_simpanan(app):
             print("[DEBUG] Koneksi load_simpanan ditutup")
 
             for i, row in enumerate(rows):
-                row_frame = ctk.CTkFrame(scrollable_frame, fg_color="white")
+                row_frame = ctk.CTkFrame(scrollable_frame, fg_color="black")
                 row_frame.pack(fill="x", padx=10, pady=5)
 
-                ctk.CTkLabel(row_frame, text=str(row[0]), width=40, anchor="w").grid(row=0, column=0, padx=5)
-                ctk.CTkLabel(row_frame, text=row[1], width=120, anchor="w").grid(row=0, column=1, padx=5)
-                ctk.CTkLabel(row_frame, text=row[2], width=80, anchor="w").grid(row=0, column=2, padx=5)
-                ctk.CTkLabel(row_frame, text=f"Rp {row[3]:,.0f}", width=100, anchor="e").grid(row=0, column=3, padx=5)
-                ctk.CTkLabel(row_frame, text=row[4], width=100, anchor="e").grid(row=0, column=4, padx=5)
+                row_frame.grid_columnconfigure(0, weight=0)  # ID tetap
+                for col in range(1, 5):
+                    row_frame.grid_columnconfigure(col, weight=1)  # Kolom 1–4 melar
 
-                ctk.CTkButton(row_frame, text="✏️", width=30, command=lambda r=row: show_form("edit", r)).grid(row=0, column=5, padx=5)
-                ctk.CTkButton(row_frame, text="🗑️", width=30, command=lambda r=row: delete_simpanan(r[0])).grid(row=0, column=6, padx=5)
+                # Label untuk ID
+                ctk.CTkLabel(row_frame, text=str(row[0]), anchor="w").grid(
+                    row=0, column=0, padx=5, pady=5, sticky="ew"
+                )
+
+                # Entry untuk kolom 1–4
+                for col in range(1, 5):
+                    val = row[col]
+                    # Format uang untuk kolom ke-3 (index ke-3 = column=3)
+                    if col == 3 and isinstance(val, (int, float)):
+                        val = f"{val:,.0f}"
+                    entry = ctk.CTkEntry(row_frame, border_width=0, fg_color="transparent")
+                    entry.insert(0, str(val))
+                    entry.grid(row=0, column=col, padx=2, pady=5, sticky="ew")
+
+                # Tombol aksi
+                ctk.CTkButton(
+                    row_frame, text="✏️", command=lambda r=row: show_form("edit", r), width=80
+                ).grid(row=0, column=5, padx=5, pady=5)
+
+                ctk.CTkButton(
+                    row_frame, text="🗑️", fg_color="red", hover_color="#cc3333", width=80,
+                    command=lambda r=row: delete_simpanan(r[0])
+                ).grid(row=0, column=6, padx=5, pady=5)
 
         except Exception as e:
             print(f"[ERROR] load_simpanan: {e}")
@@ -54,11 +75,20 @@ def show_simpanan(app):
                 print(f"[ERROR] delete_simpanan: {e}")
                 messagebox.showerror("Gagal Menghapus", str(e))
 
+
+    form = None
     def show_form(mode="add", selected=None):
+        nonlocal form
+        if form is not None and form.winfo_exists():
+            form.focus()
+            return
+        
         form = ctk.CTkToplevel(app)
         form.title("Form Simpanan")
         form.geometry("420x400")
         form.resizable(False, False)
+        form.grab_set()
+        helper.center_window(form, 420, 400)
 
         try:
             cursor = conn.cursor()
